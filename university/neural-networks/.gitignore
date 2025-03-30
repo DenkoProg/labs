@@ -1,0 +1,158 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+*.egg
+
+# C extensions
+*.c
+*.cpp
+*.o
+*.obj
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+pip-wheel-metadata/
+*.manifest
+*.spec
+
+# Virtual environment
+venv/
+.env/
+env/
+ENV/
+*.env
+*.env.*
+.venv/
+venv.bak/
+bin/
+include/
+lib/
+local/
+pyvenv.cfg
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+
+# VSCode settings
+.vscode/
+.history/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Logs and debugging
+*.log
+*.out
+*.pid
+*.err
+*.swp
+*.swo
+*.swn
+logs/
+debug.log
+
+# Python cache
+*.sqlite3
+db.sqlite3
+
+# Unit test / coverage reports
+htmlcov/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+hypothesis/
+.tox/
+.nox/
+.pytest_cache/
+junit.xml
+
+# Model checkpoints & training artifacts
+*.h5
+*.ckpt
+*.pth
+*.pt
+*.model
+checkpoints/
+saved_models/
+model_weights/
+runs/
+logs/
+*.tensorboard
+tensorboard_logs/
+lightning_logs/
+mlruns/
+
+# Optuna optimization results
+*.db
+study.db
+optuna_trials.csv
+optuna_study.json
+
+# Compiled files
+*.class
+
+# MacOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDEs and editors
+.idea/
+.project
+*.sublime-workspace
+*.sublime-project
+
+# Environment-specific files
+.env
+.env.local
+.env.production
+.env.development
+env/
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*.swo
+*.swn
+*.orig
+*.lock
+
+# Hidden files
+.*~
+
+# Ignore specific file types
+*.csv
+*.tsv
+*.pkl
+*.json
+*.hdf5
+*.npz
+*.npy
+
+# Backup files
+*.bak
+*.old
