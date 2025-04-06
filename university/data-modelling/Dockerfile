@@ -1,0 +1,9 @@
+FROM postgis/postgis:15-3.3-alpine
+
+ENV POSTGRES_USER=dm
+ENV POSTGRES_PASSWORD=dm123
+ENV POSTGRES_DB=farm
+
+EXPOSE 5432
+
+CMD ["postgres"]
