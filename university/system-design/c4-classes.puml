@@ -1,0 +1,243 @@
+@startuml "Document Service Class Diagram"
+
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+skinparam classArrowFontSize 12
+
+' Controllers
+class DocumentController {
+  -IDocumentService _documentService
+  +GetDocument(string id)
+  +GetDocuments(DocumentFilter filter)
+  +CreateDocument(DocumentDto document)
+  +UpdateDocument(string id, DocumentDto document)
+  +DeleteDocument(string id)
+  +ExportToExcel(string[] ids)
+  +ExportToPdf(string id)
+  +GetVersionHistory(string id)
+  +RestoreVersion(string id, string versionId)
+}
+
+' Services
+interface IDocumentService {
+  +GetDocumentAsync(string id)
+  +GetDocumentsAsync(DocumentFilter filter)
+  +CreateDocumentAsync(DocumentDto document)
+  +UpdateDocumentAsync(string id, DocumentDto document)
+  +DeleteDocumentAsync(string id)
+  +ExportToExcelAsync(string[] ids)
+  +ExportToPdfAsync(string id)
+  +GetVersionHistoryAsync(string id)
+  +RestoreVersionAsync(string id, string versionId)
+}
+
+class DocumentService {
+  -IMetadataRepository _metadataRepository
+  -IStorageClient _storageClient
+  -IMicrosoftGraphClient _graphClient
+  -ICacheClient _cacheClient
+  -IMonitoringClient _monitoringClient
+  +GetDocumentAsync(string id)
+  +GetDocumentsAsync(DocumentFilter filter)
+  +CreateDocumentAsync(DocumentDto document)
+  +UpdateDocumentAsync(string id, DocumentDto document)
+  +DeleteDocumentAsync(string id)
+  +ExportToExcelAsync(string[] ids)
+  +ExportToPdfAsync(string id)
+  +GetVersionHistoryAsync(string id)
+  +RestoreVersionAsync(string id, string versionId)
+  -UploadContentAsync(Stream content, string fileName)
+  -DownloadContentAsync(string storageLocation)
+}
+
+' Repository and Clients interfaces
+interface IMetadataRepository {
+  +GetByIdAsync(string id)
+  +SearchAsync(DocumentFilter filter)
+  +CreateAsync(Document document)
+  +UpdateAsync(Document document)
+  +DeleteAsync(string id)
+}
+
+interface IStorageClient {
+  +UploadAsync(Stream content, string path)
+  +DownloadAsync(string path)
+  +DeleteAsync(string path)
+}
+
+interface IMicrosoftGraphClient {
+  ' Document operations
+  +CreateDocumentAsync(string fileName, string folderId, Stream content)
+  +CreateWorkbookAsync(string fileName, string folderId)
+  +CreatePresentationAsync(string fileName, string folderId)
+
+  ' Content operations
+  +GetDocumentContentAsync(string fileId)
+  +UpdateDocumentContentAsync(string fileId, Stream content)
+
+  ' Versioning operations
+  +GetVersionsAsync(string fileId)
+  +RestoreVersionAsync(string fileId, string versionId)
+
+  ' Conversion operations
+  +ConvertToPdfAsync(string fileId)
+  +ExportToExcelAsync(IEnumerable<Dictionary<string, object>> data)
+
+  ' Excel operations
+  +CreateWorksheetAsync(string fileId, string sheetName)
+  +AddTableToWorksheetAsync(string fileId, string worksheetId, string tableName, IEnumerable<Dictionary<string, object>> data)
+  +ExecuteWorkbookFunctionAsync(string fileId, string functionName, object[] parameters)
+
+  ' Sharing and permissions
+  +GetUserInfoAsync(string userId)
+  +GetPermissionsAsync(string documentId)
+  +UpdatePermissionsAsync(string documentId, IEnumerable<Permission> permissions)
+  +ShareDocumentAsync(string documentId, string userEmail, PermissionLevel level)
+
+  ' Collaboration
+  +GetCommentsAsync(string fileId)
+  +AddCommentAsync(string fileId, string content, string parentId)
+}
+
+interface ICacheClient {
+  +GetAsync(string key)
+  +SetAsync(string key, object value, TimeSpan expiry)
+  +RemoveAsync(string key)
+}
+
+interface IMonitoringClient {
+  +LogEvent(string eventName, properties)
+  +LogException(Exception ex, properties)
+  +LogMetric(string metricName, double value, dimensions)
+}
+
+' Domain Classes
+class Document {
+  +string Id
+  +string Title
+  +string Description
+  +string OwnerId
+  +string StorageLocation
+  +DocumentType Type
+  +DateTime CreatedAt
+  +DateTime ModifiedAt
+  +DocumentStatus Status
+  +List<string> Tags
+  +List<Permission> Permissions
+  +AddPermission(Permission permission)
+  +RemovePermission(string userId)
+  +ChangeStatus(DocumentStatus status)
+}
+
+class Permission {
+  +string UserId
+  +PermissionLevel Level
+  +Permission(string userId, PermissionLevel level)
+}
+
+class DocumentVersion {
+  +string VersionId
+  +string DocumentId
+  +DateTime CreatedAt
+  +string CreatedBy
+  +string ChangeDescription
+}
+
+' DTOs
+class DocumentDto {
+  +string Id
+  +string Title
+  +string Description
+  +string OwnerId
+  +string OwnerName
+  +DocumentType Type
+  +DateTime CreatedAt
+  +DateTime ModifiedAt
+  +DocumentStatus Status
+  +List<string> Tags
+  +List<PermissionDto> Permissions
+}
+
+class DocumentFilter {
+  +string TitleContains
+  +DocumentType? Type
+  +DateTime? CreatedAfter
+  +DateTime? CreatedBefore
+  +string OwnerId
+  +List<string> Tags
+  +DocumentStatus? Status
+  +int Skip
+  +int Take
+}
+
+class PermissionDto {
+  +string UserId
+  +PermissionLevel Level
+}
+
+class DocumentVersionDto {
+  +string VersionId
+  +DateTime CreatedAt
+  +string CreatedByName
+  +string ChangeDescription
+}
+
+' Enums
+enum DocumentType {
+  PDF
+  DOCX
+  XLSX
+  PPTX
+  IMAGE
+  OTHER
+}
+
+enum DocumentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+  DELETED
+}
+
+enum PermissionLevel {
+  READ
+  WRITE
+  OWNER
+}
+
+' Relationships
+
+' Association (simple reference)
+DocumentController --> IDocumentService : uses
+DocumentController ..> DocumentFilter : uses
+
+' Realization (implementation)
+IDocumentService <|.. DocumentService : implements
+
+' Aggregation (weak ownership)
+DocumentService o--> IMetadataRepository : uses
+DocumentService o--> IStorageClient : uses
+DocumentService o--> IMicrosoftGraphClient : uses
+DocumentService o--> ICacheClient : uses
+DocumentService o--> IMonitoringClient : uses
+
+' Dependency (parameter/return)
+DocumentService .> Document : manipulates
+DocumentService ..> DocumentDto : returns
+DocumentService ..> DocumentVersionDto : returns
+IMetadataRepository .> Document : returns
+IMicrosoftGraphClient ..> DocumentVersion : returns
+
+' Composition (strong ownership)
+Document *--> Permission : contains
+DocumentDto *--> PermissionDto : contains
+
+' Association with enum
+Document --> DocumentType : has
+Document --> DocumentStatus : has
+Permission --> PermissionLevel : has
+
+' Association with multiplicity
+Document "1" -> "0..*" DocumentVersion : has versions
+
+@enduml

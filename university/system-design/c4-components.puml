@@ -1,0 +1,32 @@
+@startuml
+title Document Service - Component Diagram
+
+package "Document Service [ASP.NET]" {
+
+    [DocumentController] --> [DocumentService]
+
+    [DocumentService] --> [MetadataRepository]
+    [DocumentService] --> [StorageClient]
+    [DocumentService] --> [MicrosoftGraphClient]
+    [DocumentService] --> [CacheClient]
+    [DocumentService] --> [MonitoringClient]
+
+    [MetadataRepository] --> [PostgreSQL Database]
+    [StorageClient] --> [Amazon S3 Storage]
+    [MicrosoftGraphClient] --> [Microsoft Graph API]
+    [CacheClient] --> [Redis Cache]
+    [MonitoringClient] --> [Monitoring & Logging System]
+}
+
+package "External Systems" {
+    [API Gateway]
+    [PostgreSQL Database] as PG
+    [Amazon S3 Storage] as S3
+    [Microsoft Graph API]
+    [Redis Cache]
+    [Monitoring & Logging System]
+}
+
+[API Gateway] --> [DocumentController] : HTTP(S) Requests
+
+@enduml

@@ -1,0 +1,26 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+' Actors
+Person(employee, "Employee", "Handles documents, projects, and collaboration tasks")
+Person(admin, "Administrator", "Supports a§anages the system")
+Person(client, "Client", "Views and interacts with documents and projects")
+
+' System
+System(digitalOffice, "Digital Office", "Integrated platform for document management, project management, and collaboration")
+
+' External systems
+System_Ext(msOffice, "MS Office", "Used for document creation and editing")
+System_Ext(erp, "ERP System", "Used for internal resource planning")
+System_Ext(crm, "CRM System", "Used to manage client relationships")
+
+' Relationships
+Rel(employee, digitalOffice, "Uses", "Web Interface")
+Rel(admin, digitalOffice, "Manages and supports", "Admin Interface")
+Rel(client, digitalOffice, "Accesses services", "Web Interface")
+
+Rel(digitalOffice, msOffice, "Integrates with", "Microsoft Graph API")
+Rel(digitalOffice, erp, "Exchanges data with", "REST API")
+Rel(digitalOffice, crm, "Integrates with", "REST API")
+
+@enduml

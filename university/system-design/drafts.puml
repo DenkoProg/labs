@@ -1,0 +1,27 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+LAYOUT_WITH_LEGEND()
+
+Person(user, "User")
+
+System_Boundary(auth, "Auth Service") {
+  Container(auth_api, "Auth API", "REST", "Authentication & user management")
+}
+
+System_Boundary(doc, "Document Service") {
+  Container(doc_api, "Document API", "REST", "Manages documents")
+  Container(doc_consumer, "UserEventsConsumer", "Worker", "Processes user update events from SQS")
+  ContainerDb(user_profiles_db, "user_profiles", "PostgreSQL/Redis", "Cached user info")
+}
+
+System_Ext(sns, "SNS Topic: user.events", "Amazon SNS")
+System_Ext(sqs, "SQS Queue: DocumentEventsQueue", "Amazon SQS")
+
+Rel(user, auth_api, "Logs in, updates profile")
+Rel(auth_api, sns, "Publishes user events")
+Rel(sns, sqs, "Forwards events")
+Rel(sqs, doc_consumer, "Delivers messages")
+Rel(doc_consumer, user_profiles_db, "Updates profile cache")
+Rel(doc_api, user_profiles_db, "Reads user names/emails")
+
+@enduml

@@ -1,0 +1,68 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+' System
+System_Boundary(s1, "Digital Office") {
+    Container(webApp, "Web Application", "React", "User interface for employees, clients, and admins")
+    Container(apiGateway, "API Gateway", "AWS API Gateway", "Handles REST/WebSocket requests and routes to internal services")
+    Container(authService, "Auth Service", "OAuth2 + RDS PostgreSQL", "Authentication and Authorization")
+    Container(documentService, "Document Service", "REST + RDS PostgreSQL", "Handles document creation, editing, and management")
+    Container(projectService, "Project Management Service", "REST + RDS PostgreSQL", "Tracks project tasks, milestones, and collaboration")
+    Container(chatService, "Chat Service", "WebSocket + DocumentDB", "Real-time communication and collaboration")
+    Container(notificationService, "Notification Service", "DynamoDB", "Pushes system notifications and reminders")
+    Container(reportService, "Report Service", "REST + Internal processing", "Generates reports and exports data")
+    Container(erpIntegrationApi, "ERP Integration API", "REST", "Connects to external ERP and CRM systems")
+    Container(crmIntegrationApi, "CRM Integration API", "REST", "Connects to external ERP and CRM systems")
+    Container(fileStorage, "File Storage", "Amazon S3", "Stores documents, media, and reports")
+    Container(cache, "Cache", "Amazon ElastiCache (Redis)", "Caching layer for improving performance")
+    Container(monitoring, "Monitoring & Logging", "Amazon CloudWatch", "Collects logs and system metrics")
+}
+
+' External systems
+System_Ext(msOffice, "MS Office", "Microsoft Graph API")
+System_Ext(erp, "ERP System", "Enterprise Resource Planning")
+System_Ext(crm, "CRM System", "Customer Relationship Management")
+
+' Users
+Person(employee, "Employee")
+Person(admin, "Administrator")
+Person(client, "Client")
+
+' Relationships
+Rel(employee, webApp, "Uses")
+Rel(client, webApp, "Uses")
+Rel(admin, webApp, "Manages")
+Rel(webApp, apiGateway, "Routes requests")
+
+apiGateway --> authService : "Handles authentication"
+apiGateway --> documentService : "Routes REST/WebSocket calls"
+apiGateway --> projectService : "Routes projects related requests"
+apiGateway --> chatService : "Routes WebSocket messages"
+apiGateway --> notificationService : "Pushes notifications"
+apiGateway --> reportService : "Routes report generation requests"
+apiGateway --> erpIntegrationApi : "Routes erp integration requests"
+apiGateway -> crmIntegrationApi : "Routes crm integration requests"
+
+documentService <-> fileStorage : "Stores/retrieves documents"
+reportService <-> fileStorage : "Imports/Exports generated reports"
+
+
+erpIntegrationApi --> erp : "Sends/Receives data"
+crmIntegrationApi --> crm : "Sends/Receives data"
+documentService --> msOffice : "Integrates with for editing"
+
+' Cache usage (now explicitly read/written)
+documentService <--> cache : Reads/Writes documents metadata
+projectService <--> cache : Reads/Writes project data
+notificationService <--> cache : Reads/Writes notifications
+authService <--> cache : Reads/Writes user sessions
+
+' Monitoring
+documentService --> monitoring : "Sends logs/metrics"
+chatService --> monitoring : "Sends logs/metrics"
+projectService --> monitoring : "Sends logs/metrics"
+notificationService --> monitoring : "Sends logs/metrics"
+authService --> monitoring : "Sends logs/metrics"
+
+
+@enduml
