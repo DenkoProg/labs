@@ -1,13 +1,17 @@
+import os
+import sys
+import pandas as pd
 from airflow import DAG
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.operators.python import PythonOperator
 from airflow.utils.dates import days_ago
-from sqlalchemy import create_engine
-import pandas as pd
-import os
 
-DB_CONN = "postgresql+psycopg2://airflow:airflow@postgres:5432/airflow"
-CSV_DIR = "data"
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from config.settings import config
+from managers.db import db_manager
+from config.logger import logger
+
+# Constants
 SQL_DIR = "sql"
 
 default_args = {
@@ -16,7 +20,7 @@ default_args = {
 
 dag = DAG(
     dag_id="etl_sales_pipeline",
-    description="Повний ETL: завантаження, агрегація, збереження",
+    description="Complete ETL: loading, aggregation, saving",
     default_args=default_args,
     start_date=days_ago(1),
     schedule_interval=None,
@@ -47,10 +51,17 @@ aggregations = [
 
 def load_csv_to_postgres(csv_file, table_name):
     def _load():
-        df = pd.read_csv(os.path.join(CSV_DIR, csv_file))
-        engine = create_engine(DB_CONN)
+        logger.info(f"Loading {table_name} from {csv_file}")
+        csv_path = os.path.join(config.DATA_OUTPUT_DIR, csv_file)
+
+        if not os.path.exists(csv_path):
+            logger.error(f"CSV file not found: {csv_path}")
+            raise FileNotFoundError(f"CSV file not found: {csv_path}")
+
+        df = pd.read_csv(csv_path)
+        engine = db_manager.get_engine()
         df.to_sql(table_name, engine, if_exists="replace", index=False)
-        print(f"✅ Завантажено {table_name} ({len(df)} рядків)")
+        logger.info(f"✅ Loaded {table_name} ({len(df)} rows)")
 
     return _load
 
@@ -76,6 +87,7 @@ for table in datasets:
     previous_task = load_task
 
 for agg in aggregations:
+    logger.info(f"Creating aggregation task: {agg['task_id']}")
     agg_task = PostgresOperator(
         task_id=agg["task_id"],
         postgres_conn_id="postgres_default",

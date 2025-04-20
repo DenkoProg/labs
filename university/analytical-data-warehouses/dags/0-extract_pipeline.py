@@ -3,6 +3,8 @@ from airflow.operators.python import PythonOperator
 from airflow.utils.dates import days_ago
 import os
 import pandas as pd
+from config.settings import config
+from config.logger import logger
 
 default_args = {
     "owner": "airflow",
@@ -17,27 +19,30 @@ dag = DAG(
     catchup=False,
 )
 
-FILE_PATH = "data/Store.xlsx"
-OUTPUT_DIR = "data/"
-
 
 def check_file_exists():
-    if not os.path.exists(FILE_PATH):
-        raise FileNotFoundError(f"Файл {FILE_PATH} не знайдено!")
-    print("Файл знайдено ✅")
+    if not os.path.exists(config.DATA_INPUT_PATH):
+        logger.error(f"File {config.DATA_INPUT_PATH} not found!")
+        raise FileNotFoundError(f"File {config.DATA_INPUT_PATH} not found!")
+    logger.info("File found ✅")
 
 
 def load_and_split_data():
-    df = pd.read_excel(FILE_PATH)
+    logger.info("Starting data loading and splitting process")
+    df = pd.read_excel(config.DATA_INPUT_PATH)
+
+    os.makedirs(config.DATA_OUTPUT_DIR, exist_ok=True)
 
     # Dim_Date
+    logger.info("Processing Date dimension")
     dim_date = df[["Order Date", "Ship Date"]].copy()
     dim_date = dim_date.drop_duplicates().reset_index(drop=True)
     dim_date["Date_ID"] = dim_date.index + 1
     dim_date = dim_date[["Date_ID", "Order Date", "Ship Date"]]
-    dim_date.to_csv(f"{OUTPUT_DIR}/dim_date.csv", index=False)
+    dim_date.to_csv(f"{config.DATA_OUTPUT_DIR}/dim_date.csv", index=False)
 
     # Dim_Customer
+    logger.info("Processing Customer dimension")
     dim_customer = (
         df[
             [
@@ -54,23 +59,26 @@ def load_and_split_data():
         .drop_duplicates()
         .reset_index(drop=True)
     )
-    dim_customer.to_csv(f"{OUTPUT_DIR}/dim_customer.csv", index=False)
+    dim_customer.to_csv(f"{config.DATA_OUTPUT_DIR}/dim_customer.csv", index=False)
 
     # Dim_Product
+    logger.info("Processing Product dimension")
     dim_product = (
         df[["Product ID", "Category", "Sub-Category", "Product Name"]]
         .drop_duplicates()
         .reset_index(drop=True)
     )
-    dim_product.to_csv(f"{OUTPUT_DIR}/dim_product.csv", index=False)
+    dim_product.to_csv(f"{config.DATA_OUTPUT_DIR}/dim_product.csv", index=False)
 
     # Dim_ShipMode
+    logger.info("Processing ShipMode dimension")
     dim_shipmode = df[["Ship Mode"]].drop_duplicates().reset_index(drop=True)
     dim_shipmode["ShipMode_ID"] = dim_shipmode.index + 1
     dim_shipmode = dim_shipmode[["ShipMode_ID", "Ship Mode"]]
-    dim_shipmode.to_csv(f"{OUTPUT_DIR}/dim_shipmode.csv", index=False)
+    dim_shipmode.to_csv(f"{config.DATA_OUTPUT_DIR}/dim_shipmode.csv", index=False)
 
     # Sales_Fact
+    logger.info("Processing Sales Fact table")
     sales_fact = df.copy()
     sales_fact = sales_fact.merge(dim_date, on=["Order Date", "Ship Date"], how="left")
     sales_fact = sales_fact.merge(dim_shipmode, on="Ship Mode", how="left")
@@ -88,9 +96,9 @@ def load_and_split_data():
         ]
     ]
     sales_fact.insert(0, "Fact_ID", range(1, len(sales_fact) + 1))
-    sales_fact.to_csv(f"{OUTPUT_DIR}/sales_fact.csv", index=False)
+    sales_fact.to_csv(f"{config.DATA_OUTPUT_DIR}/sales_fact.csv", index=False)
 
-    print("Таблиці створені та збережені у data/ ✅")
+    logger.info("All tables created and saved successfully ✅")
 
 
 # === Operators ===

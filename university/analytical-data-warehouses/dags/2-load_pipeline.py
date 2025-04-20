@@ -1,14 +1,17 @@
 import os
-
+import sys
 import pandas as pd
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.utils.dates import days_ago
-from sqlalchemy import create_engine
 
-DB_CONN = "postgresql+psycopg2://airflow:airflow@postgres:5432/airflow"
-CSV_DIR = "data"
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from config.settings import config
+from managers.db import db_manager
+from config.logger import logger
+
+# Constants
 SQL_DIR = "sql"
 
 default_args = {
@@ -43,10 +46,17 @@ tables = [
 
 def load_csv_to_postgres(csv_file, table_name):
     def _load():
-        df = pd.read_csv(os.path.join(CSV_DIR, csv_file))
-        engine = create_engine(DB_CONN)
+        logger.info(f"Loading {table_name} from {csv_file}")
+        csv_path = os.path.join(config.DATA_OUTPUT_DIR, csv_file)
+
+        if not os.path.exists(csv_path):
+            logger.error(f"CSV file not found: {csv_path}")
+            raise FileNotFoundError(f"CSV file not found: {csv_path}")
+
+        df = pd.read_csv(csv_path)
+        engine = db_manager.get_engine()
         df.to_sql(table_name, engine, if_exists="replace", index=False)
-        print(f"✅ Завантажено {table_name} ({len(df)} рядків)")
+        logger.info(f"✅ Loaded {table_name} ({len(df)} rows)")
 
     return _load
 
