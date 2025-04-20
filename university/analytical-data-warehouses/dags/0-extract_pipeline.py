@@ -21,14 +21,12 @@ FILE_PATH = "data/Store.xlsx"
 OUTPUT_DIR = "data/"
 
 
-# === TASK 1 ===
 def check_file_exists():
     if not os.path.exists(FILE_PATH):
         raise FileNotFoundError(f"Файл {FILE_PATH} не знайдено!")
     print("Файл знайдено ✅")
 
 
-# === TASK 2 ===
 def load_and_split_data():
     df = pd.read_excel(FILE_PATH)
 
