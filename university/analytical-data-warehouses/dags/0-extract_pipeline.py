@@ -1,17 +1,19 @@
+import os
+
+import pandas as pd
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.utils.dates import days_ago
-import os
-import pandas as pd
-from config.settings import config
 from config.logger import logger
+from config.settings import config
+from config.datasets import dim_customer, dim_date, dim_product, dim_shipmode, sales_fact
 
 default_args = {
     "owner": "airflow",
 }
 
 dag = DAG(
-    "data_pipeline",
+    "extract_pipeline",
     default_args=default_args,
     description="Pipeline: check file, load xlsx, split into dimensional tables",
     schedule_interval=None,
@@ -101,7 +103,6 @@ def load_and_split_data():
     logger.info("All tables created and saved successfully ✅")
 
 
-# === Operators ===
 check_file_task = PythonOperator(
     task_id="check_file",
     python_callable=check_file_exists,
@@ -111,6 +112,7 @@ check_file_task = PythonOperator(
 load_split_task = PythonOperator(
     task_id="load_and_split",
     python_callable=load_and_split_data,
+    outlets=[dim_customer, dim_date, dim_product, dim_shipmode, sales_fact],
     dag=dag,
 )
 
