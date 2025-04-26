@@ -5,6 +5,13 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.utils.dates import days_ago
+from config.datasets import (
+    dim_customer,
+    dim_product,
+    dim_shipmode,
+    dim_date,
+    sales_fact,
+)
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from config.settings import config
@@ -22,7 +29,7 @@ dag = DAG(
     dag_id="load_csv_to_postgres",
     default_args=default_args,
     start_date=days_ago(1),
-    schedule_interval=None,
+    schedule=[dim_customer, dim_date, dim_product, dim_shipmode, sales_fact],
     catchup=False,
     description="Load dimensional tables and fact table into PostgreSQL from CSV",
 )
@@ -60,6 +67,13 @@ def load_csv_to_postgres(csv_file, table_name):
 
     return _load
 
+dataset_map = {
+    "dim_customer.csv": dim_customer,
+    "dim_product.csv": dim_product,
+    "dim_shipmode.csv": dim_shipmode,
+    "dim_date.csv": dim_date,
+    "sales_fact.csv": sales_fact,
+}
 
 for table in tables:
     create_task = PostgresOperator(
@@ -72,6 +86,7 @@ for table in tables:
     load_task = PythonOperator(
         task_id=f"load_{table['name']}",
         python_callable=load_csv_to_postgres(table["csv"], table["name"]),
+        inlets=[dataset_map[table["csv"]]],
         dag=dag,
     )
 
