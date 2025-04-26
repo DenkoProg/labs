@@ -6,7 +6,13 @@ from airflow.operators.python import PythonOperator
 from airflow.utils.dates import days_ago
 from config.logger import logger
 from config.settings import config
-from config.datasets import dim_customer, dim_date, dim_product, dim_shipmode, sales_fact
+from config.datasets import (
+    dim_customer,
+    dim_date,
+    dim_product,
+    dim_shipmode,
+    sales_fact,
+)
 
 default_args = {
     "owner": "airflow",

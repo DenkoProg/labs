@@ -67,6 +67,7 @@ def load_csv_to_postgres(csv_file, table_name):
 
     return _load
 
+
 dataset_map = {
     "dim_customer.csv": dim_customer,
     "dim_product.csv": dim_product,
