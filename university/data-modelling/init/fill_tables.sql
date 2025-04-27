@@ -1,11 +1,11 @@
 -- Заповнення таблиці Farm
-INSERT INTO Farm (name, address, manager, phone, license, annual_budget, annual_revenue)
+INSERT INTO Farm (name, address, manager, phone, license)
 VALUES
-('Green Valley Farm', '123 Greenway, Springfield', 'John Doe', '+380501234567', 'LV12345', 500000.00, 750000.00),
-('Sunny Acres', '456 Sunshine Rd, Sunnyvale', 'Jane Smith', '+380671112233', 'LV23456', 400000.00, 600000.00),
-('Oakwood Farm', '789 Oak St, Forestville', 'Alice Johnson', '+380931234567', 'LV34567', 300000.00, 450000.00),
-('Riverside Fields', '321 River Rd, Riverside', 'Michael Brown', '+380661122334', 'LV45678', 700000.00, 1000000.00),
-('Golden Harvest', '654 Harvest Blvd, Farmtown', 'Emily Davis', '+380991223344', 'LV56789', 550000.00, 800000.00);
+('Green Valley Farm', '123 Greenway, Springfield', 'John Doe', '+380501234567', 'LV12345'),
+('Sunny Acres', '456 Sunshine Rd, Sunnyvale', 'Jane Smith', '+380671112233', 'LV23456'),
+('Oakwood Farm', '789 Oak St, Forestville', 'Alice Johnson', '+380931234567', 'LV34567'),
+('Riverside Fields', '321 River Rd, Riverside', 'Michael Brown', '+380661122334', 'LV45678'),
+('Golden Harvest', '654 Harvest Blvd, Farmtown', 'Emily Davis', '+380991223344', 'LV56789');
 
 -- Заповнення таблиці LandPlot
 INSERT INTO LandPlot (farm_id, area, soil_type, coordinates, status, rent_cost_per_hectare)
