@@ -1,27 +1,68 @@
 @startuml
-!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
-LAYOUT_WITH_LEGEND()
+' Communication diagram for Login and Project Retrieval Flow
+' Define all components with proper UML notation
 
-Person(user, "User")
+skinparam componentStyle uml2
+skinparam defaultFontName Arial
+skinparam sequenceMessageAlign center
+skinparam linetype ortho
+actor "User" as User
+component "Web Application" as WebApp
+component "API Gateway" as APIGateway
+component "Auth Service" as AuthService
+component "Project Service" as ProjectService
+database "Redis\n(Session Cache)" as Redis
+database "Database" as DB
+collections "CloudWatch Logs" as CloudWatch
 
-System_Boundary(auth, "Auth Service") {
-  Container(auth_api, "Auth API", "REST", "Authentication & user management")
+<style>
+object, queue {
+  MinimumWidth 750
+  Padding       0
+}
+</style>
+
+' Login flow connections with proper numbering
+User -[#blue]-> WebApp : "1: Submit login credentials"
+WebApp -[#blue]-> APIGateway : "2: POST /login"
+APIGateway -[#blue]-> AuthService : "3: validateCredentials(username, password)"
+AuthService -[#blue]-> Redis : "4: cacheSession(userID, token)"
+AuthService -[#blue,dashed]-> APIGateway : "5: JWT token"
+APIGateway -[#blue,dashed]-> WebApp : "6: return token"
+
+' Project retrieval flow
+WebApp -[#green]-> APIGateway : "7: GET /projects [with JWT token]"
+APIGateway -[#green]-> ProjectService : "8: getProjectsForUser(token)"
+ProjectService -[#green]-> Redis : "9: validateSession(token)"
+ProjectService -[#green]-> DB : "10: SELECT projects WHERE user_id = ..."
+ProjectService -[#green,dashed]-> APIGateway : "11: projectList[]"
+APIGateway -[#green,dashed]-> WebApp : "12: projectList[]"
+
+' Logging
+ProjectService -[#red]-> CloudWatch : "13: log(\"project_list_view\", userID, timestamp)"
+
+' Add colors to components for better visualization
+skinparam actor {
+  BackgroundColor #F9F
+  BorderColor #333
 }
 
-System_Boundary(doc, "Document Service") {
-  Container(doc_api, "Document API", "REST", "Manages documents")
-  Container(doc_consumer, "UserEventsConsumer", "Worker", "Processes user update events from SQS")
-  ContainerDb(user_profiles_db, "user_profiles", "PostgreSQL/Redis", "Cached user info")
+skinparam component {
+  BackgroundColor #DFD
+  BorderColor #333
+  MinimumWidth 750
+  Padding       0
 }
 
-System_Ext(sns, "SNS Topic: user.events", "Amazon SNS")
-System_Ext(sqs, "SQS Queue: DocumentEventsQueue", "Amazon SQS")
+skinparam database {
+  BackgroundColor #FFD
+  BorderColor #333
+}
 
-Rel(user, auth_api, "Logs in, updates profile")
-Rel(auth_api, sns, "Publishes user events")
-Rel(sns, sqs, "Forwards events")
-Rel(sqs, doc_consumer, "Delivers messages")
-Rel(doc_consumer, user_profiles_db, "Updates profile cache")
-Rel(doc_api, user_profiles_db, "Reads user names/emails")
+skinparam collections {
+  BackgroundColor #DDD
+  BorderColor #333
+}
 
+WebApp -[hidden]- User
 @enduml

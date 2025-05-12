@@ -1,0 +1,49 @@
+@startuml
+skinparam linetype ortho
+skinparam ArrowFontName Courier
+skinparam ArrowFontSize 10
+skinparam ArrowFontColor DarkSlateGray
+skinparam NodeFontColor Black
+skinparam NodeFontSize 12
+skinparam NodePadding 200
+skinparam Shadowing false
+skinparam nodesep 300
+skinparam ranksep 120
+allowmixing
+
+<style>
+object {
+  MinimumWidth 300
+  Padding 0
+}
+</style>
+object "Web App"            as WA
+object "API Gateway"        as GW
+object "Auth\nService"      as AUTH
+object "Project\nService"   as PRJ
+object "Redis\nCache"       as REDIS
+object "Database"           as DB
+object "CloudWatch\nLogs"   as LOGS
+actor "User" as USER
+
+
+' ========== A. LOGIN FLOW ==========
+USER   -[#000000]-> WA     : ① Submit login
+WA  -[#000000]-> GW     : ② POST /login
+GW  -[#000000]-> AUTH   : ③ validateCredentials()
+AUTH -[#000000]-> REDIS : ④ cacheSession(token)
+AUTH -[#DarkSlateGray]-> GW : ⑤ return JWT
+GW   -[#DarkSlateGray]-> WA : ⑥ return token
+
+' ========== B. PROJECT LIST FLOW ==========
+WA  -[#000000]-> GW     : ⑦ GET /projects [JWT]
+GW  -[#000000]-> PRJ    : ⑧ getProjects(token)
+PRJ -[#000000]-> REDIS  : ⑨ validateSession(token)
+PRJ -[#000000]-> DB     : ⑩ SELECT projects WHERE user_id
+PRJ -[#DarkSlateGray]-> GW : ⑪ return projects[]
+GW  -[#DarkSlateGray]-> WA : ⑫ return projects[]
+
+' ========== C. LOGGING ==========
+PRJ -[#2E8B57]-> LOGS : ⑬ log("project_list_view")
+
+@enduml
