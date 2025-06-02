@@ -1,0 +1,50 @@
+defaults:
+  - data: cauldron # banknotes
+  - _self_
+
+postfix: "coinin_vlm_nano"
+tags:
+  - ${postfix}
+
+model:
+  name: nano_vlm
+  args:
+    weights: null # ${root_dir}/weights/
+
+resume_from_checkpoint: false
+compile: false
+
+optimizer:
+  name: adamw
+  args:
+    lr_mp: 2e-3
+    lr_backbones: 1e-4
+
+trainer:
+  accelerator: gpu
+  max_epochs: 3
+  accumulate_grad_batches: 32 # * batch_size => 256 (as in original script)
+  check_val_every_n_epoch: 1
+  precision: bf16
+
+callback:
+  monitor: val/loss_epoch
+  mode: min
+
+logger:
+  name: tensorboard
+  args:
+    save_dir: .
+
+root_dir: ${oc.env:PROJECT_ROOT}
+logs_root: ${root_dir}/logs
+logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
+hydra_dir: ${logs_root}/${logs_folder}/
+
+hydra:
+  run:
+    dir: ${hydra_dir}
+  searchpath:
+   - pkg://oml.configs
+  job:
+    chdir: True
