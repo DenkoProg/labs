@@ -1,0 +1,14 @@
+{
+	"folders": [
+        {
+            "path": "scientific-rag"
+        },
+        {
+            "path": "../../Projects/LLM-Engineers-Handbook"
+        },
+        {
+            "path": "../../Work/ml-rafflesia-api"
+        }
+    ],
+    "settings": {}
+}
